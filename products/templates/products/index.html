@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+
+{% include "products/includes/product-header.html" %}
+
+<main class="row">
+  <div  class="col-lg-6">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Produtos cadastrados para venda</th>
+          <td>{{ for_sale_count }}</td>        
+        </tr>
+
+        <tr>
+          <th>Valor total de venda em estoque</th>
+          <td>{{ total_value_for_sale }}</td>        
+        </tr>
+
+        <tr>
+          <th>Lucro médio</th>
+          <td>{{ average_profit }}</td>        
+        </tr>
+
+        <tr>
+          <th>Utilitários cadastrados</th>
+          <td>{{ utility_count }}</td>        
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</main>
+  
+{% endblock content %}
+

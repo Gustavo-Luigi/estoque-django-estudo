@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% include "transaction/includes/purchases-header.html" %}
+
+<main class="row">
+  <div  class="col-lg-6">
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Commpras realizadas nos últimos 30 dias:</th>
+          <td>{{ total_sales }}</td>        
+        </tr>
+
+        <tr>
+          <th>Produtos comprados nos últimos 30 dias:</th>
+          <td>{{ total_sold }}</td>        
+        </tr>
+
+        <tr>
+          <th>Valor total dos últimos 30 dias</th>
+          <td>R$ {{ total_value }}</td>        
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+</main>
+  
+
+{% endblock content %}

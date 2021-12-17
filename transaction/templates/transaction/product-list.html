@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% load static %}
+
+{% block content %}
+
+{% if is_sale %}
+  {% include "transaction/includes/sales-header.html" %}
+{% else %}
+  {% include "transaction/includes/purchases-header.html" %}
+{% endif %}
+
+<main>
+
+  {% include "includes/search-bar.html" %}
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        {% if is_sale %}
+          <th scope="col">Preço</th>
+        {% else %}
+          <th scope="col">Custo</th>
+        {% endif %}
+        <th scope="col">Categoria</th>
+        <th scope="col">Disponível</th>
+        <th scope="col">Quantidade</th>
+        <th scope="col">Adicionar ao Carrinho</th>
+      </tr>
+    </thead>
+
+    {% for product in products %}
+    <tr class="
+    {% if is_for_sale %}
+      {% if product.stock.available == 0 %} 
+        table-secondary 
+      {% elif product.stock.availability == 'low' %}
+        table-danger
+      {% elif product.stock.availability == 'medium' %}
+                table-warning
+                {% endif %}
+    {% endif %}"
+    >
+      
+            <th>{{ product.name }}</th>
+            {% if is_sale %}
+              <td>{{ product.price }}</td>
+            {% else %}
+              <td>{{ product.cost }}</td>
+            {% endif %}
+            <td>{{ product.category.name }}</td>
+            <td>{{ product.stock.available }}</td>
+            <form action="" method="POST">
+              {% csrf_token %}
+              <td>
+                <div class="row">
+                  <div class="col-12 col-sm-8 col-lg-7 col-xl-5">
+                    <input type="number" min="0" {% if is_for_sale %} max="{{ product.stock.available }}" {% endif %} class="form-control" name="product_quantity" placeholder="1" {% if product.stock.available == 0 and is_for_sale %} disabled {% endif %}>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button type="submit" class="btn {% if product.stock.available == 0 and is_for_sale %} btn-secondary {% else %} btn-success {% endif %}" value="{{ product.id }}" name="selected_product" {% if product.stock.available == 0 and is_for_sale %} disabled {% endif%}>Adicionar ao carrinho</button>
+              </td>
+          </form>
+          </tr>
+  
+    
+      {% endfor %}
+        
+      </tbody>
+    <tbody>
+  </table>
+
+  <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
+    <ul class="pagination mx-auto">
+      {% if products.has_previous %}
+      <li class="page-item"><a class="page-link" href="?pagina=1">&laquo;</a></li>
+      {% endif %}
+
+      {% for page in page_range  %}
+        <li class="page-item {% if page == products.number %} active {% endif %}"><a class="page-link" href="?pagina={{page}}">{{ page }}</a></li>
+      {% endfor %}
+
+      {% if products.has_next %}
+        <li class="page-item"><a class="page-link" href="?pagina={{ products.paginator.num_pages }}">&raquo;</a></li>
+      {% endif %}
+
+    </ul>
+  </nav>
+  
+</main>
+
+
+{% endblock content %}

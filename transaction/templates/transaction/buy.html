@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% include "transaction/includes/purchases-header.html" %}
+
+{{form}}
+
+<label for="id_product">Produto:</label>
+
+<select id='id_product' name="product" id="">
+  <option value="" selected>-------------</option>  
+
+  {% for product in products %}
+  ei
+    <option value="{{ product.id }}">{{ product.name }}</option>
+  {% endfor %}
+
+</select>
+  
+{% endblock content %}

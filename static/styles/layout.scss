@@ -1,0 +1,42 @@
+$headerHeight: 30px;
+$sidebarWidth: 200px;
+$sidebarHeight: calc(100% - #{$headerHeight});
+$contentWidth: calc(100% - #{$sidebarWidth});
+$content-padding: 1rem;
+
+.gz-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: $headerHeight;
+}
+
+.gz-sidebar{
+  position: fixed;
+  top: $headerHeight;
+  left: 0;
+  width: $sidebarWidth;
+  height: $sidebarHeight;
+  box-sizing: border-box;
+  padding: $content-padding;
+  overflow-y: auto;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.gz-content{
+  position: absolute;
+  top: $headerHeight;
+  left: $sidebarWidth;
+  width: $contentWidth;
+  z-index: -1;
+  padding: $content-padding;
+}
+
+.gz-unauth-content{
+  margin-top: $headerHeight;
+  padding: $content-padding;
+}

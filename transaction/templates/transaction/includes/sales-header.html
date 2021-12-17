@@ -1,0 +1,22 @@
+<header class="mb-3">
+  
+  <h1>Vendas</h1>
+
+  <nav>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}" href="{% url 'sales' %}">Geral</a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'sell' %}active{% endif %}" href="{% url 'sell' %}">Vender</a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'sale-cart' %}active{% endif %}" href="{% url 'sale-cart' %}">Carrinho</a>
+      </li>
+
+  </ul>
+</nav>
+
+</header>

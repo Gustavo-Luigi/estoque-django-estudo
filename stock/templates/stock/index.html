@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% include "stock/includes/stock-header.html" %}
+
+<main>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">Em estoque</th>
+        <th scope="col">Estoque desejado</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for product in products %}
+      
+    
+      <tr class="
+        {% if product.stock.availability == 'low' %} 
+          table-danger 
+        {% elif product.stock.availability == 'medium' %}
+          table-warning
+        {% endif %}">
+        <th>{{ product.name }}</th>
+        <td>{{ product.stock.available }}</td>
+        <td>{{ product.stock.desired_amount }}</td>
+      </tr>
+
+
+    {% endfor %}
+      
+    </tbody>
+  </table>
+</main>
+
+
+  
+{% endblock content %}

@@ -1,0 +1,14 @@
+<header class="mb-3">
+  
+  <h1>Estoque</h1>
+
+  <nav>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'stock' %}active{% endif %}" href="{% url 'stock' %}">Geral</a>
+      </li>
+
+  </ul>
+</nav>
+
+</header>

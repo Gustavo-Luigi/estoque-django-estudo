@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+
+{% load static %}
+
+
+{% block content %}
+
+{% include "products/includes/product-header.html" %}
+
+<main>
+  <form action='' method="POST">
+    {% csrf_token %}
+    <div class="row">
+  
+       
+      
+
+      <div class="col-lg-6">
+
+        <label for="id_product">Categoria:</label>
+
+        <select class="form-select" id='id-category' name="category">
+          <!-- <option value="" selected>-------------</option> -->
+        
+          {% for category in categories %}
+        
+              <option value="{{ category.id }}">{{ category.name }}</option>
+             
+        
+          {% endfor %}
+        
+        </select>
+
+        <div>
+          {{productForm.name.label_tag}}
+          {{productForm.name}}
+          
+          <div class="text-danger">
+            {{productForm.name.errors}}
+          </div>
+        </div>
+
+        <div>
+          <label for="custom_price">Preço personalizado</label>
+          <input type="checkbox" id="custom_price" value="false">
+        </div>
+      
+        <div class="d-none" id="price-field-control">
+          {{productForm.price.label_tag}}
+          {{productForm.price}}
+          <div class="text-danger">
+            {{productForm.price.errors}}
+          </div>
+        </div>
+        
+        <div>
+          <label for="custom_cost">Custo personalizado</label>
+          <input type="checkbox" id="custom_cost" value="false">
+        </div>
+
+        <div class="d-none" id="cost-field-control">
+          {{productForm.cost.label_tag}}
+          {{productForm.cost}}
+          <div class="text-danger">
+            {{productForm.cost.errors}}
+          </div>
+        </div>
+      
+        <div>
+          {{stockForm.available.label_tag}}
+          {{stockForm.available}}
+          {{stockForm.available.errors}}
+        </div>
+  
+        <div>
+          {{stockForm.desired_amount.label_tag}}
+          {{stockForm.desired_amount}}
+          {{stockForm.desired_amount.errors}}
+        </div>
+    
+        <div class="mt-3">
+          {{productForm.is_for_sale.label_tag}}
+          {{productForm.is_for_sale}}
+          <div class="text-danger">
+            {{productForm.is_for_sale.errors}}
+          </div>
+        </div>
+    
+        <div class="mt-3">
+          <input type="submit" class="btn btn-success" value="Cadastrar produto">
+        </div>
+      </div>
+      
+    </div>
+  
+  </form>
+</main>
+
+<script src="{% static '/js/formClasses.js' %}"></script>
+<script>
+  const customPriceCheck = document.getElementById('custom_price');
+  const customCostCheck = document.getElementById('custom_cost');
+  const priceFieldControl = document.getElementById('price-field-control')
+  const costFieldControl = document.getElementById('cost-field-control')
+
+  customPriceCheck.addEventListener('click', () => {
+    if(customPriceCheck.checked) {
+      priceFieldControl.classList.remove('d-none');
+    } else {
+      priceFieldControl.classList.add('d-none');
+    }
+  })
+
+  customCostCheck.addEventListener('click', () => {
+    if(customCostCheck.checked) {
+      costFieldControl.classList.remove('d-none');
+    } else {
+      costFieldControl.classList.add('d-none');
+    }
+  })
+
+</script>
+
+{% endblock content %}

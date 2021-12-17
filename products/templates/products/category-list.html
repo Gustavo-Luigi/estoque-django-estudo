@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% include "products/includes/product-header.html" %}
+
+<main>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">Preço Padrão</th>
+        <th scope="col">Custo Padrão</th>
+        <th scope="col">Lucro Padrão</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for category in category_list %}
+        <tr>
+          <th>{{ category.name }}</th>
+          {% if category.default_price is not None %}
+            <td>{{ category.default_price }}</td>
+          {% else %}
+            <td>0</td>
+          {% endif %}
+
+          {% if category.default_price is not None %}
+            <td>{{ category.default_cost }}</td>
+          {% else %}
+            <td>0</td>
+          {% endif %}
+          
+          <td>{{ category.profit }}</td>
+          <td>
+            <a href="{% url 'edit-category' category.id %}" class="btn btn-primary">Editar</a>
+          </td>
+        </tr>      
+
+  
+    {% endfor %}
+      
+    </tbody>
+  </table>
+
+  <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
+    <ul class="pagination mx-auto">
+      {% if category_list.has_previous %}
+      <li class="page-item"><a class="page-link" href="?pagina=1">&laquo;</a></li>
+      {% endif %}
+
+      {% for page in page_range  %}
+        <li class="page-item {% if page == category_list.number %} active {% endif %}"><a class="page-link" href="?pagina={{page}}">{{ page }}</a></li>
+      {% endfor %}
+
+      {% if category_list.has_next %}
+        <li class="page-item"><a class="page-link" href="?pagina={{ category_list.paginator.num_pages }}">&raquo;</a></li>
+      {% endif %}
+
+    </ul>
+  </nav>
+  
+</main>
+
+{% endblock content %}

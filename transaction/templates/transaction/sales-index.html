@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% include "transaction/includes/sales-header.html" %}
+
+<main class="row">
+  <div  class="col-lg-6">
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Vendas realizadas nos últimos 30 dias:</th>
+          <td>{{ total_sales }}</td>        
+        </tr>
+
+        <tr>
+          <th>Produtos vendidos nos últimos 30 dias:</th>
+          <td>{{ total_sold }}</td>        
+        </tr>
+
+        <tr>
+          <th>Ticket médio</th>
+          <td>R$ {{ average_ticket }}</td>        
+        </tr>
+
+        <tr>
+          <th>Valor total dos últimos 30 dias</th>
+          <td>R$ {{ total_value }}</td>        
+        </tr>
+
+        <tr>
+          <th>Produto mais vendido*</th>
+          <td>{{ top_seller }}</td>        
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <p>*: Em caso de empate, será selecionado um produto qualquer dentre os valores semelhantes</p>
+</main>
+  
+{% endblock content %}
+

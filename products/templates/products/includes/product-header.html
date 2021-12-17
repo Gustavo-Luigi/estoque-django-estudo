@@ -1,0 +1,28 @@
+<header class="mb-3">
+  
+  <h1>Produtos</h1>
+
+  <nav>
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'products' %}active{% endif %}" href="{% url 'products' %}">Geral</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'product-list' %}active{% endif %}" href="{% url 'product-list' %}">Produtos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'utility-list' %}active{% endif %}" href="{% url 'utility-list' %}">Utilitários</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'categories' %}active{% endif %}" href="{% url 'categories' %}">Categorias</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'insert-category' %}active{% endif %}" href="{% url 'insert-category' %}">Inserir Categoria</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'insert-product' %}active{% endif %}" href="{% url 'insert-product' %}">Inserir Produto</a>
+      </li>
+  </ul>
+</nav>
+
+</header>

@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% if is_sale %}
+  {% include "transaction/includes/sales-header.html" %}
+{% else %}
+  {% include "transaction/includes/purchases-header.html" %}
+{% endif %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Nome</th>
+      {% if is_sale %}
+        <th scope="col">Preço</th>
+      {% else %}
+       <th scope="col">Custo</th>
+      {% endif %}
+
+      <th scope="col">Categoria</th>
+      <th scope="col">Quantidade</th>
+      <th scope="col">Valor total</th>
+      <th scope="col">Remover do Carrinho</th>
+    </tr>
+  </thead>
+
+  {% for cart in carts %}
+    <tr>
+      <th>{{ cart.product.name }}</th>
+      {% if is_sale %}
+        <td>{{ cart.product.price }}</td>
+      {% else %}
+      <td>{{ cart.product.cost }}</td>
+      {% endif %}
+      <td>{{ cart.product.category.name }}</td>
+      <td>{{ cart.quantity }}</td>
+      <td>{{ cart.total_price }}</td>
+
+      <form action="" method="POST">
+        {% csrf_token %}
+        <td>
+          <button type="submit" class="btn btn-danger" value="{{ cart.id }}" name="cancel_product">Remover do carrinho</button>
+        </td>
+      </form>
+    </tr>
+  
+  {% endfor %}
+      
+    </tbody>
+  <tbody>
+</table>
+
+{% if carts|length > 0 %}
+  <div class="mt-5">
+    <h2>Total: R$ {{ total_value }}</h2>
+
+    <form action="" method='POST' class="mt-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success" value="done" name="finish-sale">
+        {% if is_sale %}
+          Finalizar venda
+        {% else %}
+          Finalizar compra
+        {% endif %}
+      
+      </button>
+    </form>
+  </div>
+{% endif %}
+  
+{% endblock content %}
+

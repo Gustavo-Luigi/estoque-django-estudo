@@ -1,0 +1,71 @@
+<div class="bg-primary gz-sidebar bg-dark">
+  <hr class="text-light">
+  <div>
+    <ul class="nav nav-pills flex-column mb-auto">
+      {% with request.resolver_match.url_name as url_name %}
+
+        <li class="nav-item">
+          <a href={% url 'home' %} class="nav-link text-white {% if url_name == 'home' %}active{% endif %}">
+            <span class="gz-sidebar-icon">
+              {% include "./icons/home-outline.html" %}
+            </span>
+            Home
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href={% url 'products' %} class="nav-link text-white {% if 'produtos' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/ice-pop.html" %}
+            Produtos
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href={% url 'stock' %} class="nav-link text-white {% if 'estoque' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/package-variant.html" %}
+            Estoque
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href={% url 'sales' %} class="nav-link text-white {% if 'vendas' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/basket-outline.html" %}
+            Vendas
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href={% url 'purchases' %} class="nav-link text-white {% if 'compras' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/cart-outline.html" %}
+            Compras
+          </a>
+        </li>
+
+        <!-- <li class="nav-item">
+          <a href={% url 'stock' %} class="nav-link text-white {% if 'estoque' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/domain.html" %}
+            Empresa
+          </a>
+        </li> -->
+
+        <hr class="text-light">
+
+        <!-- <li class="nav-item">
+          <a href={% url 'stock' %} class="nav-link text-white {% if 'estoque' in request.build_absolute_uri %}active{% endif %}">
+            {% include "./icons/comment-quote-outline.html" %}
+            Feedback
+          </a>
+        </li>
+
+        <hr class="text-light">
+
+        <li>
+          <p class="text-secondary text-center">
+            Versão 0.0.0
+          </p>
+        </li> -->
+
+      {% endwith %}
+      </ul>
+  </div>
+</div>
