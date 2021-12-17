@@ -1,48 +1,24 @@
-from typing import Counter
 from django.db.models.query_utils import Q
 from django.shortcuts import redirect, render
-from django.core.paginator import Paginator
 from django.contrib import messages
-from django.utils import timezone
 
 
-from products.models import Product
-from transaction.models import Cart, SiteTransaction
-from transaction.utils import get_last_month_transactions
-from .forms import CartForm
+from commons.utils import get_pagination
+from products.utils import search_products
+from transaction.models import Cart
+from transaction.utils import finish_purchase, finish_sale, generate_purchase_cart_form, generate_sale_cart_form, get_average_ticket, get_carts_total_value, get_last_month_carts, get_last_month_transactions, get_sold_products_from_carts, get_top_seller, get_total_transaction_value, remove_from_purchase_cart, remove_from_sale_cart, save_purchase_to_cart, save_sale_to_cart, sum_carts_product_quantity
 
 
 # Create your views here.
 def sales_index(request):
-    today = timezone.now()
-    last_mont = (today - timezone.timedelta(days=30))
-
     sales = get_last_month_transactions(request, is_sale=True)
-    carts = Cart.objects.all().filter(belongs_to=request.user, closed_at__lte=today,
-                                      closed_at__gte=last_mont, is_sale=True)
+    carts = get_last_month_carts(request, is_sale=True)
 
-    total_value = 0
-    sold_products = []
-
-    for cart in carts:
-        for product in range(cart.quantity):
-            sold_products.append(cart.product.name)
-
-    if len(sold_products) > 0:
-        top_seller = Counter(sold_products).most_common()[0][0]
-    else:
-        top_seller = ''
-        
-
-    for sale in sales:
-        total_value += sale.total_value
-
+    sold_products = get_sold_products_from_carts(carts)
+    top_seller = get_top_seller(sold_products)
+    total_value = get_total_transaction_value(sales)
     total_sales = sales.count()
-
-    if total_sales > 0:
-        average_ticket = total_value / total_sales
-    else:
-        average_ticket = 0
+    average_ticket = get_average_ticket(total_sales, total_value)
 
     context = {
         'total_sales': total_sales,
@@ -57,58 +33,17 @@ def sales_index(request):
 def sell(request):
     url = 'transaction/product-list.html'
 
-    if request.GET.get('search') is None:
-        products = Product.objects.all().filter(
-            belongs_to=request.user, is_for_sale=True).order_by('name')
-    else:
-        products = Product.objects.all().filter(Q(belongs_to=request.user) & Q(
-            name__icontains=request.GET['search']) & Q(is_for_sale=True)).order_by('name')
-
-    paginated_products = Paginator(products, 10)
-
-    if request.GET.get('pagina') is None:
-        requested_page = 1
-    else:
-        requested_page = request.GET.get('pagina')
-
-    selected_page = paginated_products.get_page(requested_page)
-    page_range = range(1, paginated_products.num_pages + 1)
+    products = search_products(request)
+    selected_page, page_range = get_pagination(request, products, 10)
 
     context = {'products': selected_page,
                'page_range': page_range, 'is_sale': True}
 
     if request.method == 'POST':
-        selected_product = Product.objects.get(
-            id=request.POST['selected_product'])
-
-        if not request.POST['product_quantity'].strip(' '):
-            quantity = 1
-        else:
-            quantity = float(request.POST['product_quantity'])
-
-        if float(quantity) < 1:
-            messages.error(
-                request, 'Quantidade inválida, produto não adicionado ao carrinho!')
-            return render(request, url, context)
-        elif float(quantity) > selected_product.stock.available:
-            messages.error(
-                request, 'Quantidade indisponível em estoque, produto não adicionado ao carrinho!')
-            return render(request, url, context)
-
-        form = CartForm({
-            'product': request.POST['selected_product'],
-            'quantity': quantity
-        })
+        form = generate_sale_cart_form(request, url, context)
 
         if form.is_valid():
-            cart = form.save(commit=False)
-            cart.belongs_to = request.user
-            cart.total_price = cart.product.price * cart.quantity
-            cart.save()
-            selected_product.stock.available -= quantity
-            selected_product.stock.save()
-            messages.success(
-                request, f'{cart.product.name} ({cart.quantity}) foi adicionado ao carrinho com sucesso!')
+            save_sale_to_cart(request, form)
         else:
             messages.error(
                 request, 'Algo deu errado, verifique os dados preenchidos!')
@@ -121,37 +56,16 @@ def sale_cart(request):
     carts = Cart.objects.all().filter(Q(belongs_to=request.user)
                                       & Q(active=True) & Q(is_sale=True))
 
-    total_value = 0
-
-    for cart in carts:
-        total_value += cart.total_price
+    total_value = get_carts_total_value(carts)
 
     if request.method == 'POST':
         is_canceling_product = request.POST.get('cancel_product', False)
 
         if is_canceling_product:
-            cart_to_remove = Cart.objects.get(
-                id=request.POST['cancel_product'])
-            cart_to_remove.product.stock.available += cart_to_remove.quantity
-            cart_to_remove.product.stock.save()
-            cart_to_remove.delete()
-            messages.success(
-                request, f'{cart_to_remove.product.name} removido com sucesso!')
+            remove_from_sale_cart(request)
             return redirect('sale-cart')
         elif request.POST['finish-sale']:
-            transaction = SiteTransaction.objects.create(
-                total_value=total_value,
-                is_sale=True,
-                belongs_to=request.user
-            )
-
-            for cart in carts:
-                cart.cart_from = transaction
-                cart.active = False
-                cart.closed_at = timezone.now()
-                cart.save()
-
-            messages.success(request, 'Venda realizada com sucesso!')
+            finish_sale(request, carts)
             return redirect('sell')
 
     context = {'carts': carts, 'total_value': total_value, 'is_sale': True}
@@ -159,22 +73,11 @@ def sale_cart(request):
 
 
 def purchases_index(request):
-    today = timezone.now()
-    last_mont = (today - timezone.timedelta(days=30))
+    purchases = get_last_month_transactions(request, is_sale=False)
+    carts = get_last_month_carts(request, is_sale=False)
 
-    purchases = SiteTransaction.objects.all().filter(closed_at__lte=today,
-                                                 closed_at__gte=last_mont, is_sale=False)
-    carts = Cart.objects.all().filter(closed_at__lte=today,
-                                      closed_at__gte=last_mont, is_sale=False)
-
-    total_value = 0
-    sold_products = 0
-
-    for cart in carts:
-        sold_products += cart.quantity
-
-    for purchase in purchases:
-        total_value += purchase.total_value
+    total_value = get_total_transaction_value(purchases)
+    sold_products = sum_carts_product_quantity(carts)
 
     total_sales = purchases.count()
 
@@ -190,52 +93,18 @@ def buy(request):
     url = 'transaction/product-list.html'
     is_for_sale = False
 
-    if request.GET.get('search') is None:
-        products = Product.objects.all().filter(
-            belongs_to=request.user).order_by('name')
-    else:
-        products = Product.objects.all().filter(Q(belongs_to=request.user) & Q(
-            name__icontains=request.GET['search'])).order_by('name')
+    products = search_products(request)
+    selected_page, page_range = get_pagination(request, products, 10)
 
-    paginated_products = Paginator(products, 10)
-
-    if request.GET.get('pagina') is None:
-        requested_page = 1
-    else:
-        requested_page = request.GET.get('pagina')
-
-    selected_page = paginated_products.get_page(requested_page)
-    page_range = range(1, paginated_products.num_pages + 1)
-
-    context = {'products': selected_page, 'page_range': page_range, 'is_for_sale': is_for_sale}
+    context = {'products': selected_page,
+               'page_range': page_range,
+               'is_for_sale': is_for_sale}
 
     if request.method == 'POST':
-        selected_product = Product.objects.get(
-            id=request.POST['selected_product'])
-
-        if not request.POST['product_quantity'].strip(' '):
-            quantity = 1
-        else:
-            quantity = float(request.POST['product_quantity'])
-
-        if float(quantity) < 1:
-            messages.error(
-                request, 'Quantidade inválida, produto não adicionado ao carrinho!')
-            return render(request, url, context)
-
-        form = CartForm({
-            'product': request.POST['selected_product'],
-            'quantity': quantity
-        })
+        form = generate_purchase_cart_form(request, url, context)
 
         if form.is_valid():
-            cart = form.save(commit=False)
-            cart.belongs_to = request.user
-            cart.total_price = cart.product.cost * cart.quantity
-            cart.is_sale = False
-            cart.save()
-            messages.success(
-                request, f'{cart.product.name} ({cart.quantity}) foi adicionado ao carrinho com sucesso!')
+            save_purchase_to_cart(request, form)
         else:
             messages.error(
                 request, 'Algo deu errado, verifique os dados preenchidos!')
@@ -248,37 +117,16 @@ def buy_cart(request):
     carts = Cart.objects.all().filter(Q(belongs_to=request.user)
                                       & Q(active=True) & Q(is_sale=False))
 
-    total_value = 0
-
-    for cart in carts:
-        total_value += cart.total_price
+    total_value = get_carts_total_value(carts)
 
     if request.method == 'POST':
         is_canceling_product = request.POST.get('cancel_product', False)
 
         if is_canceling_product:
-            cart_to_remove = Cart.objects.get(id=request.POST['cancel_product'])
-            cart_to_remove.delete()
-            messages.success(
-                request, f'{cart_to_remove.product.name} removido com sucesso!')
+            remove_from_purchase_cart(request)
             return redirect('buy-cart')
         elif request.POST['finish-sale']:
-            transaction = SiteTransaction.objects.create(
-                total_value=total_value,
-                is_sale=False,
-                belongs_to=request.user
-            )
-
-            for cart in carts:
-                product = cart.product
-                product.stock.available += cart.quantity
-                cart.cart_from = transaction
-                cart.active = False
-                cart.closed_at = timezone.now()
-                product.stock.save()
-                cart.save()
-
-            messages.success(request, 'Compra realizada com sucesso!')
+            finish_purchase(request, carts)
             return redirect('buy')
 
     context = {'carts': carts, 'total_value': total_value}

@@ -23,8 +23,12 @@
           <!-- <option value="" selected>-------------</option> -->
         
           {% for category in categories %}
-        
-              <option value="{{ category.id }}">{{ category.name }}</option>
+
+          {% if category.name == 'Indefinido' %}
+            <option value="{{ category.id }}" selected>{{ category.name }}</option>
+          {% else %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endif %}
              
         
           {% endfor %}
