@@ -1,35 +1,27 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db.models import Q
 
-
+from commons.utils import get_pagination
 from products.forms import CategoryForm, ProductForm
 from products.models import Category, Product
+from products.utils import generate_product_form, generate_stock_form, get_average_profit, get_total_sell_value, save_product
 from stock.forms import StockForm
 
 # Create your views here.
 
 
 def index(request):
-    products_for_sale = Product.objects.all().filter(Q(belongs_to=request.user) & Q(is_for_sale=True))
-    for_sale_count = products_for_sale.count()
-    utility_count = Product.objects.all().filter(Q(belongs_to=request.user) & Q(is_for_sale=False)).count()
+    products_for_sale = Product.objects.all().filter(
+        Q(belongs_to=request.user) & Q(is_for_sale=True))
+    utility_count = Product.objects.all().filter(
+        Q(belongs_to=request.user) & Q(is_for_sale=False)).count()
 
-    total_value_for_sale = 0
-    total_profit_for_sale = 0
-
-    for product in products_for_sale:
-        total_value_for_sale += (product.price * product.stock.available)
-        total_profit_for_sale += product.profit
-
-    if for_sale_count != 0:
-        average_profit = total_profit_for_sale / for_sale_count
-    else:
-      average_profit = 0
+    total_value_for_sale = get_total_sell_value(products_for_sale)
+    average_profit = get_average_profit(products_for_sale)
 
     context = {
-        'for_sale_count': for_sale_count,
+        'for_sale_count': products_for_sale.count(),
         'utility_count': utility_count,
         'total_value_for_sale': total_value_for_sale,
         'average_profit': average_profit
@@ -40,83 +32,31 @@ def index(request):
 
 def insert_product(request):
     url = 'products/insert-product.html'
-    undefined_category, created = Category.objects.get_or_create(name='Indefinido')
+    undefined_category, created = Category.objects.get_or_create(
+        name='Indefinido')
     categories = Category.objects.all().filter(
         Q(belongs_to=request.user) | Q(belongs_to=None))
 
     if request.method == 'POST':
-        selected_category_form = request.POST.get('category', undefined_category.id)
-        # if request.POST['category'] == '':
-        #     selected_category = Category.objects.get_or_create('indefinido')
-        # else:
-        #     selected_category = Category.objects.get(
-        #         id=request.POST['category'])
-        try:
-            selected_category = Category.objects.get(id=selected_category_form)
-        except:
-            messages.error(request, 'Categoria inválida')
-            return redirect('insert-product')
+        product_form = generate_product_form(request)
+        stock_form = generate_stock_form(request)
 
-        if selected_category.belongs_to != request.user and selected_category.belongs_to != None:
-            messages.error(request, 'Categoria inválida')
-            return redirect('insert-product')
-
-        if request.POST['price'] == '':
-            price = selected_category.default_price
-        else:
-            price = request.POST['price']
-
-        if request.POST['cost'] == '':
-            cost = selected_category.default_cost
-        else:
-            cost = request.POST['cost']
-
-        if request.POST['available'] == '':
-            available = 0
-        else:
-            available = request.POST['available']
-
-        if request.POST['desired_amount'] == '':
-            desired_amount = 0
-        else:
-            desired_amount = request.POST['desired_amount']
-
-        is_for_sale = request.POST.get('is_for_sale', False)
-
-        productForm = ProductForm({
-            'name': request.POST['name'],
-            'price': price,
-            'cost': cost,
-            'category': request.POST['category'],
-            'is_for_sale': is_for_sale,
-        })
-
-        stockForm = StockForm({
-            'available': available,
-            'desired_amount': desired_amount,
-        })
-
-        if productForm.is_valid() and stockForm.is_valid:
-            product = productForm.save(commit=False)
-            product.belongs_to = request.user
-            stock = stockForm.save(commit=False)
-            product.stock = stock
-            stock.save()
-            product.save()
+        if product_form.is_valid() and stock_form.is_valid:
+            save_product(request, product_form, stock_form)
             return redirect('products')
         else:
             context = {
-                'productForm': productForm,
-                'stockForm': stockForm,
+                'productForm': product_form,
+                'stockForm': stock_form,
                 'categories': categories
             }
             return render(request, url, context)
 
-    productForm = ProductForm()
-    stockForm = StockForm()
+    product_form = ProductForm()
+    stock_form = StockForm()
     context = {
-        'productForm': productForm,
-        'stockForm': stockForm,
+        'productForm': product_form,
+        'stockForm': stock_form,
         'categories': categories
     }
     return render(request, url, context)
@@ -127,8 +67,6 @@ def edit_product(request, pk):
 
     try:
         product_to_edit = Product.objects.get(id=pk)
-        if product_to_edit.belongs_to != request.user:
-            raise
     except:
         messages.error(request, 'Produto inválido')
 
@@ -139,48 +77,8 @@ def edit_product(request, pk):
         Q(belongs_to=request.user) | Q(belongs_to=None))
 
     if request.method == 'POST':
-        if request.POST['category'] == '':
-            selected_category = Category.objects.get(id=1)
-        else:
-            selected_category = Category.objects.get(
-                id=request.POST['category'])
-
-        if request.POST['price'] == '':
-            price = selected_category.default_price
-        else:
-            price = request.POST['price']
-
-        if request.POST['cost'] == '':
-            cost = selected_category.default_cost
-        else:
-            cost = request.POST['cost']
-
-        if request.POST['available'] == '':
-            available = 0
-        else:
-            available = request.POST['available']
-
-        if request.POST['desired_amount'] == '':
-            desired_amount = 0
-        else:
-            desired_amount = request.POST['desired_amount']
-
-        is_for_sale = request.POST.get('is_for_sale', False)
-
-        productForm = ProductForm({
-            'id': pk,
-            'name': request.POST['name'],
-            'price': price,
-            'cost': cost,
-            'category': request.POST['category'],
-            'is_for_sale': is_for_sale
-        },
-            instance=product_to_edit)
-
-        stockForm = StockForm({
-            'available': available,
-            'desired_amount': desired_amount,
-        }, instance=product_to_edit.stock)
+        productForm = generate_product_form(request, product_to_edit)
+        stockForm = generate_stock_form(request, product_to_edit.stock)
 
         if productForm.is_valid() and stockForm.is_valid:
             productForm.save()
@@ -258,16 +156,9 @@ def edit_category(request, pk):
 
 
 def product_list(request):
-    products = Product.objects.all().filter(belongs_to=request.user)
-    paginated_products = Paginator(products, 10)
-
-    if request.GET.get('pagina') is None:
-        requested_page = 1
-    else:
-        requested_page = request.GET.get('pagina')
-
-    selected_page = paginated_products.get_page(requested_page)
-    page_range = range(1, paginated_products.num_pages + 1)
+    products = Product.objects.all().filter(
+        belongs_to=request.user).order_by('name')
+    selected_page, page_range = get_pagination(request, products, 10)
 
     context = {
         'products': selected_page,
@@ -278,16 +169,9 @@ def product_list(request):
 
 def utility_list(request):
     products = Product.objects.all().filter(
-        Q(belongs_to=request.user) & Q(is_for_sale=False))
-    paginated_products = Paginator(products, 10)
+        Q(belongs_to=request.user) & Q(is_for_sale=False)).order_by('name')
 
-    if request.GET.get('pagina') is None:
-        requested_page = 1
-    else:
-        requested_page = request.GET.get('pagina')
-
-    selected_page = paginated_products.get_page(requested_page)
-    page_range = range(1, paginated_products.num_pages + 1)
+    selected_page, page_range = get_pagination(request, products, 10)
 
     context = {
         'products': selected_page,
@@ -298,15 +182,7 @@ def utility_list(request):
 
 def categories(request):
     category_list = Category.objects.all().filter(belongs_to=request.user)
-    paginated_categories = Paginator(category_list, 10)
-
-    if request.GET.get('pagina') is None:
-        requested_page = 1
-    else:
-        requested_page = request.GET.get('pagina')
-
-    selected_page = paginated_categories.get_page(requested_page)
-    page_range = range(1, paginated_categories.num_pages + 1)
+    selected_page, page_range = get_pagination(request, category_list, 10)
 
     context = {'category_list': selected_page, 'page_range': page_range}
     return render(request, 'products/category-list.html', context)
