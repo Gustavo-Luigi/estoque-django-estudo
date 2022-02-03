@@ -1,6 +1,7 @@
 from django.db.models.query_utils import Q
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
 from commons.utils import get_pagination
@@ -10,6 +11,7 @@ from transaction.utils import finish_purchase, finish_sale, generate_purchase_ca
 
 
 # Create your views here.
+@login_required(login_url='login')
 def sales_index(request):
     sales = get_last_month_transactions(request, is_sale=True)
     carts = get_last_month_carts(request, is_sale=True)
@@ -30,6 +32,7 @@ def sales_index(request):
     return render(request, 'transaction/sales-index.html', context)
 
 
+@login_required(login_url='login')
 def sell(request):
     url = 'transaction/product-list.html'
 
@@ -51,6 +54,7 @@ def sell(request):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def sale_cart(request):
     url = 'transaction/cart.html'
     carts = Cart.objects.all().filter(Q(belongs_to=request.user)
@@ -72,6 +76,7 @@ def sale_cart(request):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def purchases_index(request):
     purchases = get_last_month_transactions(request, is_sale=False)
     carts = get_last_month_carts(request, is_sale=False)
@@ -89,6 +94,7 @@ def purchases_index(request):
     return render(request, 'transaction/purchases-index.html', context)
 
 
+@login_required(login_url='login')
 def buy(request):
     url = 'transaction/product-list.html'
     is_for_sale = False
@@ -112,6 +118,7 @@ def buy(request):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def buy_cart(request):
     url = 'transaction/cart.html'
     carts = Cart.objects.all().filter(Q(belongs_to=request.user)

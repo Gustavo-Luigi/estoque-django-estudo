@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
 from commons.utils import get_pagination
 from products.forms import CategoryForm, ProductForm
@@ -11,6 +12,7 @@ from stock.forms import StockForm
 # Create your views here.
 
 
+@login_required(login_url='login')
 def index(request):
     products_for_sale = Product.objects.all().filter(
         Q(belongs_to=request.user) & Q(is_for_sale=True))
@@ -30,6 +32,7 @@ def index(request):
     return render(request, 'products/index.html', context)
 
 
+@login_required(login_url='login')
 def insert_product(request):
     url = 'products/insert-product.html'
     undefined_category, created = Category.objects.get_or_create(
@@ -62,6 +65,7 @@ def insert_product(request):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def edit_product(request, pk):
     url = 'products/edit-product.html'
 
@@ -103,6 +107,7 @@ def edit_product(request, pk):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def insert_category(request):
     url = 'products/insert-category.html'
 
@@ -123,6 +128,7 @@ def insert_category(request):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def edit_category(request, pk):
     url = 'products/edit-category.html'
     category_to_edit = Category.objects.get(id=pk)
@@ -155,6 +161,7 @@ def edit_category(request, pk):
     return render(request, url, context)
 
 
+@login_required(login_url='login')
 def product_list(request):
     products = Product.objects.all().filter(
         belongs_to=request.user).order_by('name')
@@ -167,6 +174,7 @@ def product_list(request):
     return render(request, 'products/product-list.html', context)
 
 
+@login_required(login_url='login')
 def utility_list(request):
     products = Product.objects.all().filter(
         Q(belongs_to=request.user) & Q(is_for_sale=False)).order_by('name')
@@ -180,6 +188,7 @@ def utility_list(request):
     return render(request, 'products/utility-list.html', context)
 
 
+@login_required(login_url='login')
 def categories(request):
     category_list = Category.objects.all().filter(belongs_to=request.user)
     selected_page, page_range = get_pagination(request, category_list, 10)

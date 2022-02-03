@@ -8,9 +8,10 @@ from django.contrib.auth.models import User
 from .forms import CustomUserCreationForm, LoginForm
 
 # Create your views here.
-
-
 def register(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     form = CustomUserCreationForm()
 
     if request.method == 'POST':
@@ -38,6 +39,9 @@ def register(request):
 
 
 def login_page(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     url = 'users/login.html'
 
     if request.method == 'POST':
