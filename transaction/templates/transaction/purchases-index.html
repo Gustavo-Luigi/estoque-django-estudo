@@ -21,7 +21,11 @@
 
         <tr>
           <th>Produtos comprados nos últimos 30 dias:</th>
-          <td>{{ total_sold }}</td>        
+          {% if total_sold == None %}
+          <td>0</td>        
+          {% else %}
+          <td>{{ total_sold }}</td>  
+          {% endif %}      
         </tr>
 
         <tr>
